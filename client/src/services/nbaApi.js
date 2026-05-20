@@ -16,3 +16,20 @@ export async function getGames() {
   
     return data.data;
   }
+  export async function searchPlayers(playerName) {
+    const response = await fetch(
+      `https://api.balldontlie.io/v1/players?search=${playerName}`,
+      {
+        headers: {
+          Authorization: API_KEY,
+        },
+      }
+    );
+  
+    if (!response.ok) {
+      throw new Error(`Player search failed: ${response.status}`);
+    }
+  
+    const data = await response.json();
+    return data.data;
+  }
