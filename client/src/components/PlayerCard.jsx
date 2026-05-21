@@ -1,19 +1,23 @@
+import { Link } from "react-router-dom";
+
 function PlayerCard({ player }) {
-    return (
-      <div className="rounded-xl bg-slate-900 p-6 border border-slate-800 hover:border-blue-500 transition">
-        <h3 className="text-xl font-bold">
+  return (
+    <Link to={`/player/${player.id}`}>
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-blue-500 transition cursor-pointer">
+        <h3 className="text-2xl font-bold mb-4">
           {player.first_name} {player.last_name}
         </h3>
-  
-        <p className="text-slate-400 mt-2">
-          Team: {player.team?.full_name || "Unknown"}
+
+        <p className="text-slate-400">
+          Team: {player.team.full_name}
         </p>
-  
+
         <p className="text-slate-400">
           Position: {player.position || "N/A"}
         </p>
       </div>
-    );
-  }
-  
-  export default PlayerCard;
+    </Link>
+  );
+}
+
+export default PlayerCard;
