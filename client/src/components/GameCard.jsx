@@ -19,7 +19,7 @@ function TeamRow({ abbreviation, score, home, winner, showResults }) {
   </div>;
 }
 
-export default function GameCard({ game, showResults = true }) {
+export default function GameCard({ game, showResults = true, onExplore }) {
   const even = game.home_win_probability === 0.5;
   const favorite = teamInfo(game.predicted_winner);
   const away = teamInfo(game.away_team);
@@ -38,6 +38,7 @@ export default function GameCard({ game, showResults = true }) {
       <div className="prob-bar" role="img" aria-label={`${away.fullName} ${pct(game.away_win_probability)}, ${home.fullName} ${pct(game.home_win_probability)}`} style={{ background: home.color }}><div style={{ width: pct(game.away_win_probability), background: away.color }} /></div>
       <div className="model-pick"><Icon name="target" /><span>{even ? 'Even forecast' : 'Model favors'} <strong>{even ? '50 / 50' : favorite.fullName}</strong></span></div>
     </div>
+    {onExplore && <button className="explore-players" onClick={onExplore}>Explore player matchups <Icon name="arrow" /></button>}
     <details><summary>Prediction breakdown <Icon name="arrow" /></summary><div className="breakdown"><div><span>{game.away_team} pregame Elo</span><b>{game.away_rating.toFixed(0)}</b></div><div><span>{game.home_team} pregame Elo</span><b>{game.home_rating.toFixed(0)}</b></div><p>{game.neutral_site ? 'Home and away are designations only. No home-court bonus at this neutral venue.' : 'The home team receives a 65-point Elo bonus.'} Only results from earlier dates affect these ratings.{even && ' The designated home team breaks a 50/50 tie for evaluation.'}</p></div></details>
   </article>;
 }

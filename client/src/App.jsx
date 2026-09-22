@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import GameCard from './components/GameCard';
+import Players from './components/Players';
+import Matchup from './components/Matchup';
 import Icon from './components/Icon';
 import { getData } from './services/nbaApi';
 import { teamInfo } from './utils/teams';
@@ -7,7 +9,7 @@ import './App.css';
 
 const pct = (value) => `${(value * 100).toFixed(1)}%`;
 const dateLabel = (date, options = { month: 'long', day: 'numeric', year: 'numeric' }) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', options);
-const views = [{ id: 'games', label: 'Game predictions', icon: 'grid' }, { id: 'analytics', label: 'Model analytics', icon: 'chart' }, { id: 'method', label: 'How it works', icon: 'layers' }];
+const views = [{ id: 'players', label: 'Players', icon: 'target' }, { id: 'games', label: 'Game predictions', icon: 'grid' }, { id: 'analytics', label: 'Model analytics', icon: 'chart' }, { id: 'method', label: 'How it works', icon: 'layers' }];
 
 function ErrorNotice({ message, retry }) {
   return <div className="notice error" role="alert"><Icon name="info" /><strong>Unable to load the archive</strong><p>{message}</p><button className="primary-button" onClick={retry}>Try again</button></div>;
@@ -33,6 +35,7 @@ function SeasonSummary({ selected, result, onAnalytics }) {
 }
 
 function Games({ date, retry }) {
+  const [matchup, setMatchup] = useState(null);
   const [state, setState] = useState({ loading: true });
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -44,6 +47,7 @@ function Games({ date, retry }) {
       .catch((error) => { if (error.name !== 'AbortError') setState({ error: error.message }); });
     return () => controller.abort();
   }, [date]);
+  if (matchup) return <Matchup key={matchup.game_id} game={matchup} showResults={showResults} onShowResults={(value) => { setShowResults(value); setFilter('all'); }} onBack={() => setMatchup(null)} />;
   if (state.loading) return <div className="notice" role="status">Loading game predictions…</div>;
   if (state.error) return <ErrorNotice message={state.error} retry={retry} />;
   const games = state.games;
@@ -56,7 +60,7 @@ function Games({ date, retry }) {
   return <>
     <div className="slate-heading"><div><h2>Game slate <span>{games.length}</span></h2><p>{dateLabel(date)}{showResults && games.length > 0 ? ` · ${correct} of ${games.length} picks correct` : ''}</p></div><label className="results-toggle"><input type="checkbox" checked={showResults} onChange={(event) => { setShowResults(event.target.checked); setFilter('all'); }} /><span className="switch" />Show results</label></div>
     <div className="slate-tools"><div className="filter-tabs" aria-label="Filter game results">{[['all', 'All games'], ['correct', 'Correct'], ['missed', 'Missed']].map(([id, label]) => <button key={id} disabled={!showResults && id !== 'all'} aria-pressed={filter === id} className={filter === id ? 'selected' : ''} onClick={() => setFilter(id)}>{label}</button>)}</div><label className="search-field"><Icon name="search" /><input aria-label="Search teams" placeholder="Search teams…" value={query} onChange={(event) => setQuery(event.target.value)} type="search" /></label></div>
-    {!games.length ? <div className="notice"><Icon name="calendar" /><h3>No games on this date</h3><p>Choose another date or use the arrows to find the next game day.</p></div> : !visible.length ? <div className="notice"><h3>No matching games</h3><p>Try another team or reset your filters.</p><button onClick={() => { setQuery(''); setFilter('all'); }}>Reset filters</button></div> : <><p className="sr-only" role="status">Showing {visible.length} games</p><div className="game-grid">{visible.map((game) => <GameCard key={game.game_id} game={game} showResults={showResults} />)}</div></>}
+    {!games.length ? <div className="notice"><Icon name="calendar" /><h3>No games on this date</h3><p>Choose another date or use the arrows to find the next game day.</p></div> : !visible.length ? <div className="notice"><h3>No matching games</h3><p>Try another team or reset your filters.</p><button onClick={() => { setQuery(''); setFilter('all'); }}>Reset filters</button></div> : <><p className="sr-only" role="status">Showing {visible.length} games</p><div className="game-grid">{visible.map((game) => <GameCard key={game.game_id} game={game} showResults={showResults} onExplore={() => setMatchup(game)} />)}</div></>}
   </>;
 }
 
@@ -116,6 +120,6 @@ function Dashboard({ view, onView }) {
 }
 
 export default function App() {
-  const [view, setView] = useState('games');
-  return <div className="app-shell"><a className="skip-link" href="#main">Skip to content</a><aside className="sidebar"><a href="#main" className="brand" onClick={() => setView('games')}><span className="brand-mark"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="12" /><path d="M4 16h24M16 4v24M7 7c12 3 12 15 18 18M25 7C13 10 13 22 7 25" /></svg></span><span>FORECAST<span className="brand-secondary">LAB <i>NBA</i></span></span></a><span className="sidebar-label">WORKSPACE</span><nav aria-label="Main navigation">{views.map((item) => <button key={item.id} aria-current={view === item.id ? 'page' : undefined} className={view === item.id ? 'active' : ''} onClick={() => setView(item.id)}><Icon name={item.icon} />{item.label}{view === item.id && <span className="nav-dot" />}</button>)}</nav><div className="sidebar-bottom"><span className="model-version"><i /> ELO MODEL / V1</span><p>Every prediction.<br />Open to evaluation.</p><div className="sidebar-foot">Independent NBA analytics</div></div></aside><div className="workspace"><header className="topbar"><div><span>Workspace</span><Icon name="arrow" /><strong>{views.find((item) => item.id === view).label}</strong></div><span className="archive-tag"><span /> Historical backtest</span></header><main id="main"><Dashboard view={view} onView={setView} /></main></div></div>;
+  const [view, setView] = useState('players');
+  return <div className="app-shell"><a className="skip-link" href="#main">Skip to content</a><aside className="sidebar"><a href="#main" className="brand" onClick={() => setView('games')}><span className="brand-mark"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><circle cx="16" cy="16" r="12" /><path d="M4 16h24M16 4v24M7 7c12 3 12 15 18 18M25 7C13 10 13 22 7 25" /></svg></span><span>FORECAST<span className="brand-secondary">LAB <i>NBA</i></span></span></a><span className="sidebar-label">WORKSPACE</span><nav aria-label="Main navigation">{views.map((item) => <button key={item.id} aria-current={view === item.id ? 'page' : undefined} className={view === item.id ? 'active' : ''} onClick={() => setView(item.id)}><Icon name={item.icon} />{item.label}{view === item.id && <span className="nav-dot" />}</button>)}</nav><div className="sidebar-bottom"><span className="model-version"><i /> ELO MODEL / V1</span><p>Every prediction.<br />Open to evaluation.</p><div className="sidebar-foot">Independent NBA analytics</div></div></aside><div className="workspace"><header className="topbar"><div><span>Workspace</span><Icon name="arrow" /><strong>{views.find((item) => item.id === view).label}</strong></div><span className="archive-tag"><span /> Historical backtest</span></header><main id="main">{view === 'players' ? <Players /> : <Dashboard view={view} onView={setView} />}</main></div></div>;
 }

@@ -8,6 +8,7 @@ import math
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
+from player_api import player_router
 
 DATA_DIR = Path(__file__).parent / "data" / "backtest"
 
@@ -64,6 +65,7 @@ def create_app(data_dir=DATA_DIR):
         yield
 
     app = FastAPI(title="NBA Forecast Lab", version="0.1.0", lifespan=lifespan)
+    app.include_router(player_router())
 
     def snapshot():
         if app.state.snapshot is None:
